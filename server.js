@@ -54,22 +54,16 @@ function getCrisisResponse(name) {
 // پاکسازی پاسخ AI (نسخه ۳ — خیلی قوی)
 // ═══════════════════════════════════════
 
-// کلمات خارجی رایجی که مدل ممکنه بفرسته
 const FOREIGN_WORDS = [
-  // ترکی
   'bugün', 'yarın', 'güzel', 'evet', 'hayır', 'teşekkür', 'merhaba',
   'tamam', 'lütfen', 'şimdi', 'çok', 'değil', 'için', 'nasıl',
   'neden', 'burada', 'orada', 'biraz', 'büyük', 'küçük',
-  // انگلیسی (جملات/عبارات — نه کلمات فنی)
   'you can', 'you should', 'let me', 'I think', 'make sure',
   'don\'t worry', 'keep going', 'good job', 'well done',
   'by the way', 'for example', 'in order to', 'as well',
   'however', 'therefore', 'moreover', 'furthermore',
-  // عربی (عبارات)
   'إن شاء الله', 'ما شاء الله', 'الحمد لله', 'بسم الله',
-  // اسپانیایی
   'también', 'porque', 'cuando', 'ahora', 'después',
-  // فرانسوی
   'aussi', 'parce que', 'maintenant', 'après',
 ]
 
@@ -78,41 +72,26 @@ function cleanResponse(text) {
 
   let cleaned = text
 
-  // حذف تمام حروف CJK
   cleaned = cleaned.replace(/[\u2E80-\u9FFF]/g, '')
   cleaned = cleaned.replace(/[\uF900-\uFAFF]/g, '')
   cleaned = cleaned.replace(/[\uFE30-\uFE4F]/g, '')
-
-  // حذف هیراگانا و کاتاکانا
   cleaned = cleaned.replace(/[\u3040-\u30FF]/g, '')
   cleaned = cleaned.replace(/[\u31F0-\u31FF]/g, '')
-
-  // حذف هانگول
   cleaned = cleaned.replace(/[\uAC00-\uD7AF]/g, '')
   cleaned = cleaned.replace(/[\u1100-\u11FF]/g, '')
   cleaned = cleaned.replace(/[\u3130-\u318F]/g, '')
-
-  // حذف سیریلیک
   cleaned = cleaned.replace(/[\u0400-\u04FF]/g, '')
   cleaned = cleaned.replace(/[\u0500-\u052F]/g, '')
-
-  // حذف حروف تایلندی
   cleaned = cleaned.replace(/[\u0E00-\u0E7F]/g, '')
-
-  // حذف حروف هندی
   cleaned = cleaned.replace(/[\u0900-\u097F]/g, '')
-
-  // حذف حروف لاتین با diacritic خاص (ترکی/ویتنامی)
   cleaned = cleaned.replace(/[ğĞıİöÖüÜşŞçÇ]/g, '')
   cleaned = cleaned.replace(/[ỗăắằẳẵặâấầẩẫậđêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵ]/gi, '')
 
-  // حذف کلمات خارجی رایج
   for (const word of FOREIGN_WORDS) {
     const regex = new RegExp(word, 'gi')
     cleaned = cleaned.replace(regex, '')
   }
 
-  // حذف فاصله‌های اضافی
   cleaned = cleaned.replace(/\s{3,}/g, '\n\n')
   cleaned = cleaned.replace(/\n{4,}/g, '\n\n\n')
 
@@ -310,6 +289,12 @@ async function sendToGemini(message, history, systemPrompt) {
 // API Routes
 // ═══════════════════════════════════════
 
+// ─── Ping (برای warmup و UptimeRobot) ───
+app.get('/api/ping', (req, res) => {
+  res.json({ status: 'pong', timestamp: Date.now() })
+})
+
+// ─── Health Check ───
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -319,6 +304,7 @@ app.get('/api/health', (req, res) => {
   })
 })
 
+// ─── Chat ───
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, history, userProfile, context } = req.body
